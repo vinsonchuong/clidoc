@@ -1,0 +1,32 @@
+#!/bin/bash -e
+DOCS=("$@")
+
+mkdir 'help' 'man'
+for doc in ${DOCS[@]}
+do
+	directory="$(dirname $doc)"
+	file="$(basename $doc)"
+	name="${file%.md}"
+
+	ronn "$doc"
+	mv "$directory/$name.1" 'man'
+
+	html=$(cat "$directory/$name.1.html")
+	rm "$directory/$name.1.html"
+	{
+		echo "$html" \
+			| xidel -q --css '.man-name' -
+		echo
+		echo 'Usage:'
+		echo "$html" \
+			| xidel -q --css '#SYNOPSIS + p' - \
+			| sed 's/^/  /'
+		echo
+		echo 'Options:'
+		echo "$html" \
+			| xidel -q --css '#OPTIONS + dl > *' - \
+			| paste -d ':' - - \
+			| column -t -s ':' \
+			| sed 's/^/ /'
+	} > "help/$name"
+done
