@@ -1,7 +1,7 @@
 # clidoc(1) -- generates man pages and help text from Markdown-formatted docs
 
 ## SYNOPSIS
-`clidoc` <file>...<br>
+`clidoc` _file_...<br>
 `clidoc` `-h`|`--help`<br>
 
 ## DESCRIPTION
