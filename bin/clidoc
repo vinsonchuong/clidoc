@@ -4,15 +4,15 @@ DOCS=("$@")
 mkdir 'help' 'man'
 for doc in ${DOCS[@]}
 do
-	directory="$(dirname $doc)"
-	file="$(basename $doc)"
+	directory=$(dirname "$doc")
+	file=$(basename "$doc")
 	name="${file%.md}"
 
 	ronn "$doc"
-	mv "$directory/$name.1" 'man'
+	mv "${directory}/${name}.1" 'man'
 
-	html=$(cat "$directory/$name.1.html")
-	rm "$directory/$name.1.html"
+	html=$(cat "${directory}/${name}.1.html")
+	rm "${directory}/${name}.1.html"
 	{
 		echo "$html" \
 			| xidel -q --css '.man-name' -
@@ -28,5 +28,5 @@ do
 			| paste -d ':' - - \
 			| column -t -s ':' \
 			| sed 's/^/ /'
-	} > "help/$name"
+	} > "help/${name}"
 done
