@@ -1,32 +1,45 @@
-#!/bin/bash -e
-DOCS=("$@")
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+# set -o xtrace
+set -o pipefail
 
-mkdir 'help' 'man'
-for doc in ${DOCS[@]}
-do
-	directory=$(dirname "$doc")
-	file=$(basename "$doc")
-	name="${file%.md}"
+eval "$(parse-options help:h -- "$@")"
 
-	ronn "$doc"
-	mv "${directory}/${name}.1" 'man'
+if [[ $help ]]
+then
+	cat '/usr/share/clidoc/help/clidoc'
+else
+	DOCS=("$@")
+	join_lines() {
+		perl -pe 's/\n/, / unless eof'
+	}
 
-	html=$(cat "${directory}/${name}.1.html")
-	rm "${directory}/${name}.1.html"
-	{
-		echo "$html" \
-			| xidel -q --css '.man-name' -
-		echo
-		echo 'Usage:'
-		echo "$html" \
-			| xidel -q --css '#SYNOPSIS + p' - \
-			| sed 's/^/  /'
-		echo
-		echo 'Options:'
-		echo "$html" \
-			| xidel -q --css '#OPTIONS + dl > *' - \
-			| paste -d ':' - - \
-			| column -t -s ':' \
-			| sed 's/^/ /'
-	} > "help/${name}"
-done
+	mkdir -p 'help' 'man'
+	for doc in ${DOCS[@]}
+	do
+		file=$(basename "$doc")
+		name=${file%.md}
+		contents=$(cat "$doc")
+
+		echo "$contents" | ronn --roff --pipe > "man/${name}.1"
+
+		html=$(echo "$contents" | ronn --html --pipe)
+		{
+			echo "$html" \
+				| xidel -q --css '.man-name' -
+			echo
+			echo 'Usage:'
+			echo "$html" \
+				| xidel -q --css '#SYNOPSIS + p' - \
+				| sed 's/^/  /'
+			echo
+			echo 'Options:'
+			echo "$html" \
+				| xidel -q --css '#OPTIONS + dl > *' - \
+				| paste -d ':' - - \
+				| column -t -s ':' \
+				| sed 's/^/ /'
+		} > "help/${name}"
+	done
+fi

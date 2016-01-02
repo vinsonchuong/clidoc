@@ -18,4 +18,4 @@ help text file to `./help/`.
   Show help text and exit.
 
 ## COPYRIGHT
-`clidoc` is Copyright (c) 2014 Vinson Chuong under The MIT License.
+`clidoc` is Copyright (c) 2016 Vinson Chuong under The MIT License.
