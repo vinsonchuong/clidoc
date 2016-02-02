@@ -4,42 +4,35 @@ set -o nounset
 # set -o xtrace
 set -o pipefail
 
-eval "$(parse-options help:h -- "$@")"
+DOCS=("$@")
+join_lines() {
+	perl -pe 's/\n/, / unless eof'
+}
 
-if [[ $help ]]
-then
-	cat '/usr/share/clidoc/help/clidoc'
-else
-	DOCS=("$@")
-	join_lines() {
-		perl -pe 's/\n/, / unless eof'
-	}
+mkdir -p 'help' 'man'
+for doc in ${DOCS[@]}
+do
+	file=$(basename "$doc")
+	name=${file%.md}
+	contents=$(cat "$doc")
 
-	mkdir -p 'help' 'man'
-	for doc in ${DOCS[@]}
-	do
-		file=$(basename "$doc")
-		name=${file%.md}
-		contents=$(cat "$doc")
+	echo "$contents" | ronn --roff --pipe > "man/${name}.1"
 
-		echo "$contents" | ronn --roff --pipe > "man/${name}.1"
-
-		html=$(echo "$contents" | ronn --html --pipe)
-		{
-			echo "$html" \
-				| xidel -q --css '.man-name' -
-			echo
-			echo 'Usage:'
-			echo "$html" \
-				| xidel -q --css '#SYNOPSIS + p' - \
-				| sed 's/^/  /'
-			echo
-			echo 'Options:'
-			echo "$html" \
-				| xidel -q --css '#OPTIONS + dl > *' - \
-				| paste -d ':' - - \
-				| column -t -s ':' \
-				| sed 's/^/ /'
-		} > "help/${name}"
-	done
-fi
+	html=$(echo "$contents" | ronn --html --pipe)
+	{
+		echo "$html" \
+			| xidel -q --css '.man-name' -
+		echo
+		echo 'Usage:'
+		echo "$html" \
+			| xidel -q --css '#SYNOPSIS + p' - \
+			| sed 's/^/  /'
+		echo
+		echo 'Options:'
+		echo "$html" \
+			| xidel -q --css '#OPTIONS + dl > *' - \
+			| paste -d ':' - - \
+			| column -t -s ':' \
+			| sed 's/^/ /'
+	} > "help/${name}"
+done

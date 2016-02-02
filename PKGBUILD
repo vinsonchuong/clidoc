@@ -1,4 +1,4 @@
-depends=('bash-common-parse-options' 'ruby-ronn' 'xidel')
+depends=('ruby-ronn' 'xidel')
 makedepends=()
 
 build() {
